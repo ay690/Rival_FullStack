@@ -11,8 +11,7 @@ datasource db {
   provider = "postgresql"
 }
 
-
-model User{
+model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
@@ -23,20 +22,28 @@ model User{
   tasks     Task[]
 }
 
-
 model Task {
-  id          String        @id @default(cuid())
-  title       String
-  description String?
-  status      TaskStatus    @default(TODO)
-  priority    Priority      @default(MEDIUM)
-  dueDate     DateTime?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  userId      String
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String        @id @default(cuid())
+  title        String
+  description  String?
+  status       TaskStatus    @default(TODO)
+  priority     Priority      @default(MEDIUM)
+  dueDate      DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityLogs ActivityLog[]
 }
 
+model ActivityLog {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  action    String
+  detail    String?
+  createdAt DateTime @default(now())
+}
 
 enum Role {
   USER
@@ -48,6 +55,7 @@ enum TaskStatus {
   IN_PROGRESS
   DONE
 }
+
 enum Priority {
   LOW
   MEDIUM
