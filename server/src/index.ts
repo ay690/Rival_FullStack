@@ -1,21 +1,23 @@
 import express from "express";
-import prisma from "./db.js";
+import type { Request, Response, NextFunction } from "express";
+import cors from "cors";
+import authRouter from "./routes/auth.js";
 
 const app = express();
-
-const port = process.env.PORT || 4000;
+app.use(cors());
 
 app.use(express.json());
 
-app.get("/", async (req, res) => {
-  try {
-    const users = await prisma.user.findMany(); 
-    res.json(users);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+app.use("/api/auth", authRouter);
+
+// Global error handler
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction): void => {
+  console.error(err);
+  const message = err instanceof Error ? err.message : "An unexpected error occurred";
+  res.status(500).json({ error: message });
 });
+
+const port = process.env.PORT || 4000;
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
