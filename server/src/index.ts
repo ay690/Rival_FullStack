@@ -9,7 +9,7 @@ app.use(express.json());
 
 app.get("/", async (req, res) => {
   try {
-    const users = await prisma.dummy_user.findMany(); 
+    const users = await prisma.user.findMany(); 
     res.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);
