@@ -2,13 +2,21 @@ import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import authRouter from "./routes/auth.js";
+import tasksRouter from "./routes/tasks.js";
 
 const app = express();
-app.use(cors());
+
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 
 app.use("/api/auth", authRouter);
+app.use("/api/tasks", tasksRouter);
 
 // Global error handler
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction): void => {
