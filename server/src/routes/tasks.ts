@@ -49,7 +49,7 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
         ...(b["priority"] !== undefined ? { priority: b["priority"] as Priority } : {}),
         ...(b["dueDate"] !== undefined ? { dueDate: new Date(String(b["dueDate"])) } : {}),
         user: { connect: { id: user.id } },
-        activityLogs: { create: { action: "created", detail: `Task "${title}" created` } },
+        activityLog: { create: { action: "created", detail: `Task "${title}" created` } },
       },
     });
     res.status(201).json(task);
@@ -111,7 +111,7 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
   try {
     const task = await prisma.task.findFirst({
       where: { id, ...userFilter(req) },
-      include: { activityLogs: { orderBy: { createdAt: "desc" } } },
+      include: { activityLog: { orderBy: { createdAt: "desc" } } },
     });
     if (!task) { res.status(404).json({ error: "Task not found" }); return; }
     res.json(task);
