@@ -15,10 +15,6 @@ app.use(
   })
 );
 
-// Apply JSON body parsing only to routes that expect JSON bodies.
-// The attachments route uses multipart/form-data (multer), so it must
-// NOT go through express.json() — that would cause "Unexpected token '-'"
-// errors when Express tries to parse the multipart boundary as JSON.
 const jsonParser = express.json();
 
 app.use("/api/auth", jsonParser, authRouter);
