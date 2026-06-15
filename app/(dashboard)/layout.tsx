@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Providers } from "@/components/providers";
 import { Navbar } from "@/components/navbar";
+import { FullPageSpinner } from "@/components/ui/spinner";
 import { useAuth } from "@/hooks/use-auth";
 
 function DashboardGuard({ children }: { children: React.ReactNode }) {
@@ -16,13 +17,7 @@ function DashboardGuard({ children }: { children: React.ReactNode }) {
     }
   }, [token, loading, router]);
 
-  if (loading) {
-    return (
-      <div className="flex min-h-svh items-center justify-center">
-        <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
-  }
+  if (loading) return <FullPageSpinner />;
 
   if (!token) return null;
 

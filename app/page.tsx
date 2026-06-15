@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getToken } from "@/lib/auth";
+import { FullPageSpinner } from "@/components/ui/spinner";
 
 export default function Page() {
   const router = useRouter();
@@ -16,5 +17,5 @@ export default function Page() {
     }
   }, [router]);
 
-  return null;
+  return <FullPageSpinner />;
 }
