@@ -4,6 +4,7 @@ import cors from "cors";
 import authRouter from "./routes/auth.js";
 import tasksRouter from "./routes/tasks.js";
 import adminRouter from "./routes/admin.js";
+import attachmentsRouter from "./routes/attachments.js";
 
 const app = express();
 
@@ -14,11 +15,16 @@ app.use(
   })
 );
 
-app.use(express.json());
+// Apply JSON body parsing only to routes that expect JSON bodies.
+// The attachments route uses multipart/form-data (multer), so it must
+// NOT go through express.json() — that would cause "Unexpected token '-'"
+// errors when Express tries to parse the multipart boundary as JSON.
+const jsonParser = express.json();
 
-app.use("/api/auth", authRouter);
-app.use("/api/tasks", tasksRouter);
-app.use("/api/admin", adminRouter);
+app.use("/api/auth", jsonParser, authRouter);
+app.use("/api/tasks/:taskId/attachments", attachmentsRouter);
+app.use("/api/tasks", jsonParser, tasksRouter);
+app.use("/api/admin", jsonParser, adminRouter);
 
 // Global error handler
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction): void => {

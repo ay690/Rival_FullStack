@@ -1,4 +1,4 @@
-import type { Task, TasksResponse, AuthResponse, GetTasksParams, CreateTaskInput, UpdateTaskInput, AdminStats, AdminUser, AdminTasksResponse } from "@/types";
+import type { Task, TasksResponse, AuthResponse, GetTasksParams, CreateTaskInput, UpdateTaskInput, AdminStats, AdminUser, AdminTasksResponse, Attachment } from "@/types";
 
 const BASE_URL =
     process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api";
@@ -9,9 +9,12 @@ async function apiFetch<T>(
     options: RequestInit & { token?: string } = {}
 ): Promise<T> {
     const { token, headers, ...rest } = options;
+    // Don't set Content-Type for FormData — the browser must set it automatically
+    // so it includes the multipart boundary. Setting it manually breaks multer.
+    const isFormData = rest.body instanceof FormData;
     const res = await fetch(`${BASE_URL}${path}`, {
         headers: {
-            "Content-Type": "application/json",
+            ...(!isFormData ? { "Content-Type": "application/json" } : {}),
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...headers,
         },
@@ -76,6 +79,32 @@ export const tasksApi = {
     delete(token: string, id: string): Promise<void> {
         return apiFetch(`/tasks/${id}`, { method: "DELETE", token });
     },
+};
+
+
+// Attachments
+export const attachmentsApi = {
+  list(token: string, taskId: string): Promise<Attachment[]> {
+    return apiFetch(`/tasks/${taskId}/attachments`, { token });
+  },
+  upload(token: string, taskId: string, file: File): Promise<Attachment> {
+    const form = new FormData();
+    form.append("file", file);
+    return apiFetch(`/tasks/${taskId}/attachments`, {
+      method: "POST",
+      body: form,
+      token,
+    });
+  },
+  delete(token: string, taskId: string, attachmentId: string): Promise<void> {
+    return apiFetch(`/tasks/${taskId}/attachments/${attachmentId}`, {
+      method: "DELETE",
+      token,
+    });
+  },
+  downloadUrl(taskId: string, attachmentId: string): string {
+    return `${BASE_URL}/tasks/${taskId}/attachments/${attachmentId}/download`;
+  },
 };
 
 // Admin

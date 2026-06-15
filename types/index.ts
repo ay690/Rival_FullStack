@@ -1,6 +1,17 @@
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 export type Priority = "LOW" | "MEDIUM" | "HIGH";
 
+export interface Attachment {
+  id: string;
+  taskId: string;
+  filename: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  createdAt: string;
+}
+
+
 export interface ActivityLog {
     id: string;
     action: string;

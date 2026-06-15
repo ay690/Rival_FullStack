@@ -9,11 +9,11 @@ import {
   CalendarDays,
   Pencil,
   X,
-  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AttachmentsPanel } from "@/components/attachments-panel";
 import { TaskForm } from "@/components/task-form";
 import { useTask } from "@/hooks/use-tasks";
 import type { Task, TaskStatus } from "@/types";
@@ -253,6 +253,8 @@ export default function TaskDetailPage({
               </div>
             </div>
           )}
+          {/* Attachments */}
+          <AttachmentsPanel taskId={task.id} onActivityChange={refetch} />
         </div>
       )}
     </div>
