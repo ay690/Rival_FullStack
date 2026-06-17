@@ -373,3 +373,7 @@ services:
 volumes:
   uploads_data:
 ```
+
+## DEMO
+
+Youtube: [YOUTUBE](https://youtu.be/8Fm9fDvUzN8?si=epijDIFLpepFQIGl)
