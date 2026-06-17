@@ -217,7 +217,7 @@ docker compose down
 
 | Variable               | Description                        | Default                        |
 | ---------------------- | ---------------------------------- | ------------------------------ |
-| `NEXT_PUBLIC_API_URL`  | Base URL of the Express API        | `http://localhost:4000/api`    |
+| `NEXT_PUBLIC_API_URL`  | Base URL of the Express API        | `http://localhost:5000/api`    |
 
 ### Backend (`server/.env`)
 

@@ -7,7 +7,7 @@
 ```
 ┌─────────────────────────┐        HTTP/REST        ┌──────────────────────────┐
 │   Next.js 16 Frontend   │ ──────────────────────▶ │   Express 5 Backend      │
-│   (React 19, port 3000) │ ◀────────────────────── │   (Node.js, port 4000)   │
+│   (React 19, port 3000) │ ◀────────────────────── │   (Node.js, port 5000)   │
 └─────────────────────────┘       Bearer JWT         └────────────┬─────────────┘
                                                                    │ Prisma ORM
                                                                    ▼
@@ -97,7 +97,7 @@ A generic `apiFetch<T>()` wrapper handles:
 
 Four typed API namespaces are exported: `authApi`, `tasksApi`, `attachmentsApi`, `adminApi`.
 
-Base URL is read from `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:4000/api`).
+Base URL is read from `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:5000/api`).
 
 ### Auth Persistence (`lib/auth.ts`)
 
@@ -272,7 +272,7 @@ Token and user object are stored in `localStorage`. There are no HTTP-only cooki
 | `DATABASE_URL` | Neon PostgreSQL pooled connection string |
 | `DIRECT_URL` | Neon direct connection string (used by Prisma migrations) |
 | `JWT_SECRET` | Secret key for signing/verifying JWTs |
-| `PORT` | Server listen port (defaults to `4000`; Docker sets `5000`) |
+| `PORT` | Server listen port (defaults to `5000`; Docker sets `5000`) |
 
 ---
 
