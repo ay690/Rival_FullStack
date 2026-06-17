@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon --exec tsx src/index.ts",
     "seed": "tsx src/seed.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/src/index.js",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",

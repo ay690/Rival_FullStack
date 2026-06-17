@@ -73,10 +73,16 @@ router.get("/tasks", async (req: Request, res: Response): Promise<void> => {
 router.get("/stats", async (req: Request, res: Response): Promise<void> => {
   if (!requireAdmin(req, res)) return;
   try {
-    const [totalUsers, totalTasks, byStatus] = await prisma.$transaction([
-      prisma.user.count(),
-      prisma.task.count(),
-      prisma.task.groupBy({ by: ["status"], _count: { _all: true } }),
+    const [[totalUsers, totalTasks], byStatus] = await Promise.all([
+      prisma.$transaction([
+        prisma.user.count(),
+        prisma.task.count(),
+      ]),
+      prisma.task.groupBy({
+        by: ["status"],
+        orderBy: { status: "asc" },
+        _count: { _all: true },
+      }),
     ]);
     const statusMap = Object.fromEntries(
       byStatus.map((s) => [s.status, s._count._all])
