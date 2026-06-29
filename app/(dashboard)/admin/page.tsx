@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Users, ClipboardList, CheckCircle2, Clock, Circle,
-  ChevronLeft, ChevronRight, Trash2, AlertCircle, RefreshCw,
+  ChevronLeft, ChevronRight, Trash2, AlertCircle, RefreshCw, Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,9 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogDescription, DialogClose,
 } from "@/components/ui/dialog";
+import { TaskForm } from "@/components/task-form";
 import { adminApi } from "@/lib/api";
-import type { AdminStats, AdminUser, AdminTasksResponse } from "@/types";
+import type { AdminStats, AdminUser, AdminTasksResponse, Task } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +37,11 @@ function StatCard({ icon, label, value, sub }: {
   );
 }
 
-function UserRow({ user, onDelete }: { user: AdminUser; onDelete: (id: string) => void }) {
+function UserRow({ user, onDelete, onAssign }: {
+  user: AdminUser;
+  onDelete: (id: string) => void;
+  onAssign: (user: AdminUser) => void;
+}) {
   const [confirm, setConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { token } = useAuth();
@@ -78,17 +83,29 @@ function UserRow({ user, onDelete }: { user: AdminUser; onDelete: (id: string) =
           })}
         </td>
         <td className="py-3 px-4 text-right">
-          {user.role !== "ADMIN" && (
+          <div className="flex items-center justify-end gap-1">
             <Button
               variant="ghost"
               size="icon-sm"
-              onClick={() => setConfirm(true)}
-              className="text-muted-foreground hover:text-destructive"
-              aria-label="Delete user"
+              onClick={() => onAssign(user)}
+              className="text-muted-foreground hover:text-primary"
+              aria-label={`Assign task to ${user.name}`}
+              title="Assign task"
             >
-              <Trash2 className="size-3.5" />
+              <Plus className="size-3.5" />
             </Button>
-          )}
+            {user.role !== "ADMIN" && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setConfirm(true)}
+                className="text-muted-foreground hover:text-destructive"
+                aria-label="Delete user"
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            )}
+          </div>
         </td>
       </tr>
       <Dialog open={confirm} onOpenChange={setConfirm}>
@@ -125,6 +142,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Assign task dialog state
+  const [assignTarget, setAssignTarget] = useState<AdminUser | null>(null);
+
   // Redirect non-admins
   useEffect(() => {
     if (user && user.role !== "ADMIN") router.replace("/dashboard");
@@ -154,8 +174,33 @@ export default function AdminPage() {
 
   if (user?.role !== "ADMIN") return null;
 
+  // Non-admin users only (admins can't be assigned tasks from this view)
+  const assignableUsers = users.filter((u) => u.role !== "ADMIN");
+
   return (
     <div className="flex flex-col gap-8">
+      {/* Assign Task Dialog */}
+      <Dialog open={!!assignTarget} onOpenChange={(open) => { if (!open) setAssignTarget(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Assign task to {assignTarget?.name}</DialogTitle>
+            <DialogDescription>
+              Create a new task and assign it to <strong>{assignTarget?.email}</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          {assignTarget && (
+            <TaskForm
+              users={assignableUsers}
+              defaultAssignedUserId={assignTarget.id}
+              onSuccess={(_task: Task) => {
+                setAssignTarget(null);
+                // Refresh stats and tasks to reflect the new task
+                load();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -251,6 +296,7 @@ export default function AdminPage() {
                         key={u.id}
                         user={u}
                         onDelete={(id) => setUsers((prev) => prev.filter((x) => x.id !== id))}
+                        onAssign={(target) => setAssignTarget(target)}
                       />
                     ))
                   )}
