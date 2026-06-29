@@ -7,17 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { tasksApi } from "@/lib/api";
-import { Task, TaskStatus, Priority } from "@/types";
+import { tasksApi, adminApi } from "@/lib/api";
+import { Task, TaskStatus, Priority, AdminUser } from "@/types";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 interface TaskFormProps {
     task?: Task; // if provided → edit mode
     onSuccess?: (task: Task) => void;
+    /** If provided, renders an "Assign to" dropdown — for admin use */
+    users?: Pick<AdminUser, "id" | "name" | "email">[];
+    /** Pre-selected user when opening the form from a specific user row */
+    defaultAssignedUserId?: string;
 }
 
-export function TaskForm({ task, onSuccess }: TaskFormProps) {
+export function TaskForm({ task, onSuccess, users, defaultAssignedUserId }: TaskFormProps) {
     const { token } = useAuth();
     const router = useRouter();
 
@@ -29,6 +33,9 @@ export function TaskForm({ task, onSuccess }: TaskFormProps) {
     );
     const [dueDate, setDueDate] = useState(
         task?.dueDate ? task.dueDate.slice(0, 10) : ""
+    );
+    const [assignedUserId, setAssignedUserId] = useState(
+        defaultAssignedUserId ?? (users?.[0]?.id ?? "")
     );
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -64,6 +71,9 @@ export function TaskForm({ task, onSuccess }: TaskFormProps) {
             let result: Task;
             if (task) {
                 result = await tasksApi.update(token!, task.id, payload);
+            } else if (users && assignedUserId) {
+                // Admin assigning a task to a specific user
+                result = await adminApi.createTask(token!, assignedUserId, payload);
             } else {
                 result = await tasksApi.create(token!, payload);
             }
@@ -83,6 +93,24 @@ export function TaskForm({ task, onSuccess }: TaskFormProps) {
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {/* Assign to — admin only */}
+            {users && users?.length > 0 && (
+                <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="assignedUser">Assign to</Label>
+                    <Select
+                        id="assignedUser"
+                        value={assignedUserId}
+                        onChange={(e) => setAssignedUserId(e.target.value)}
+                    >
+                        {users?.map((u) => (
+                            <option key={u.id} value={u.id}>
+                                {u.name} ({u.email})
+                            </option>
+                        ))}
+                    </Select>
+                </div>
+            )}
+
             {/* Title */}
             <div className="flex flex-col gap-1.5">
                 <Label htmlFor="title">

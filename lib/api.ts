@@ -131,4 +131,15 @@ export const adminApi = {
     deleteUser(token: string, id: string): Promise<void> {
         return apiFetch(`/admin/users/${id}`, { method: "DELETE", token });
     },
+    createTask(
+        token: string,
+        assignedUserId: string,
+        data: CreateTaskInput
+    ): Promise<Task & { user: { id: string; name: string; email: string } }> {
+        return apiFetch("/admin/tasks", {
+            method: "POST",
+            body: JSON.stringify({ assignedUserId, ...data }),
+            token,
+        });
+    },
 };

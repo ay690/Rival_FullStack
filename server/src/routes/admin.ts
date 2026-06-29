@@ -94,6 +94,69 @@ router.get("/stats", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// POST /api/admin/tasks — create a task assigned to a specific user
+router.post("/tasks", async (req: Request, res: Response): Promise<void> => {
+  if (!requireAdmin(req, res)) return;
+
+  const b = req.body as Record<string, unknown>;
+
+  if (typeof b["assignedUserId"] !== "string" || b["assignedUserId"].trim().length === 0) {
+    res.status(400).json({ error: "assignedUserId is required" });
+    return;
+  }
+  if (typeof b["title"] !== "string" || b["title"].trim().length === 0) {
+    res.status(400).json({ error: "title is required" });
+    return;
+  }
+
+  const VALID_STATUSES = ["TODO", "IN_PROGRESS", "DONE"] as const;
+  const VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH"] as const;
+
+  if (b["status"] !== undefined && !VALID_STATUSES.includes(b["status"] as (typeof VALID_STATUSES)[number])) {
+    res.status(400).json({ error: `status must be one of: ${VALID_STATUSES.join(", ")}` });
+    return;
+  }
+  if (b["priority"] !== undefined && !VALID_PRIORITIES.includes(b["priority"] as (typeof VALID_PRIORITIES)[number])) {
+    res.status(400).json({ error: `priority must be one of: ${VALID_PRIORITIES.join(", ")}` });
+    return;
+  }
+  if (b["dueDate"] !== undefined && isNaN(Date.parse(String(b["dueDate"])))) {
+    res.status(400).json({ error: "dueDate must be a valid ISO date string" });
+    return;
+  }
+
+  try {
+    const targetUser = await prisma.user.findUnique({ where: { id: b["assignedUserId"] as string } });
+    if (!targetUser) {
+      res.status(404).json({ error: "Target user not found" });
+      return;
+    }
+
+    const title = (b["title"] as string).trim();
+    const task = await prisma.task.create({
+      data: {
+        title,
+        ...(typeof b["description"] === "string" ? { description: b["description"] } : {}),
+        ...(b["status"] !== undefined ? { status: b["status"] as (typeof VALID_STATUSES)[number] } : {}),
+        ...(b["priority"] !== undefined ? { priority: b["priority"] as (typeof VALID_PRIORITIES)[number] } : {}),
+        ...(b["dueDate"] !== undefined ? { dueDate: new Date(String(b["dueDate"])) } : {}),
+        user: { connect: { id: b["assignedUserId"] as string } },
+        activityLog: {
+          create: {
+            action: "created",
+            detail: `Task "${title}" assigned by admin`,
+          },
+        },
+      },
+      include: { user: { select: { id: true, name: true, email: true } } },
+    });
+    res.status(201).json(task);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // DELETE /api/admin/users/:id — delete a user and all their tasks
 router.delete("/users/:id", async (req: Request, res: Response): Promise<void> => {
   if (!requireAdmin(req, res)) return;
